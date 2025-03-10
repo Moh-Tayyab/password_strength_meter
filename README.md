@@ -1,6 +1,6 @@
-# 🔒 Password Strength Meter
+# 🛡️ Password Fortress
 
-A modern, interactive web application that helps users create secure passwords by providing real-time strength analysis and personalized improvement suggestions.
+A modern, interactive web application that helps users create secure passwords by providing real-time strength analysis, random password generation, and password enhancement capabilities.
 
 ![Password Strength Meter](https://img.shields.io/badge/Security-Password%20Strength-brightgreen)
 ![Streamlit](https://img.shields.io/badge/Built%20with-Streamlit-FF4B4B)
@@ -12,8 +12,10 @@ A modern, interactive web application that helps users create secure passwords b
 - **Visual Strength Indicator**: Color-coded progress bar shows password strength at a glance
 - **Detailed Feedback**: Receive specific warnings about password vulnerabilities
 - **Personalized Suggestions**: Get actionable tips to improve your password security
-- **Educational Resources**: Learn best practices for creating and managing secure passwords
-- **Beautiful UI/UX**: Enjoy a clean, responsive interface with smooth animations
+- **Random Password Generator**: Create strong, customizable random passwords with various character options
+- **Password Enhancer**: Strengthen existing passwords by adding complexity, length, and mixed case
+- **Entropy Calculation**: View the mathematical entropy of your passwords for security assessment
+- **Beautiful UI/UX**: Enjoy a clean, responsive interface with smooth animations and a modern design
 
 ## 🚀 Installation
 
@@ -26,8 +28,8 @@ A modern, interactive web application that helps users create secure passwords b
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/password-strength-meter.git
-   cd password-strength-meter
+   git clone https://github.com/yourusername/password-fortress.git
+   cd password-fortress
    ```
 
 2. Create a virtual environment (optional but recommended):
@@ -55,7 +57,10 @@ A modern, interactive web application that helps users create secure passwords b
 
 2. Open your web browser and navigate to the URL displayed in your terminal (typically http://localhost:8501)
 
-3. Enter a password in the input field and click "Check Password Strength" to see the analysis
+3. Use the tabbed interface to access different features:
+   - **🔍 Check Strength**: Enter a password and analyze its security level
+   - **🎲 Random Generator**: Create strong random passwords with customizable options
+   - **🛠️ Custom Builder**: Enhance existing passwords by adding complexity and length
 
 ## 🔧 How It Works
 
@@ -67,16 +72,18 @@ The application uses the zxcvbn library, developed by Dropbox, which employs pat
 - Dictionary words and names
 - Known leaked passwords
 
+Additionally, the app calculates password entropy, which is a mathematical measure of password unpredictability based on the character set size and password length.
+
 Based on this analysis, the app provides:
 
-1. A strength score (Weak, Normal, Strong)
+1. A strength score (Weak, Moderate, Strong)
 2. Visual feedback with color-coded indicators
 3. Specific warnings about detected vulnerabilities
 4. Customized suggestions for improving password security
 
 ## 🛠️ Technologies Used
 
-- **Streamlit**: For the web application framework
+- **Streamlit**: For the web application framework and interactive UI components
 - **zxcvbn-python**: For advanced password strength analysis
 - **Python**: Core programming language
 - **HTML/CSS**: For custom styling and animations

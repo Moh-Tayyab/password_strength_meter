@@ -2,160 +2,218 @@ import streamlit as st
 import re
 from zxcvbn import zxcvbn
 import time
+import string
+import random
+import math
 
 # Set page configuration
 st.set_page_config(
-    page_title="Password Strength Meter",
-    page_icon="🔒",
+    page_title="Password Fortress",
+    page_icon="🛡️",
     layout="centered",
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for styling
+# Custom CSS for a professional and attractive UI
 st.markdown("""
 <style>
+    :root {
+        --primary-color: #4f46e5; /* Indigo */
+        --secondary-color: #9333ea; /* Purple */
+        --accent-color: #ec4899; /* Pink */
+        --bg-color: #f9fafb; /* Light Gray */
+        --text-color: #1f2937; /* Dark Gray */
+        --glass-bg: rgba(255, 255, 255, 0.9);
+        --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    body {
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        font-family: 'Inter', sans-serif;
+    }
+
     .main {
+        background: var(--glass-bg);
+        border-radius: 16px;
         padding: 2rem;
-        border-radius: 10px;
-        background-color: #f8f9fa;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: var(--shadow);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
     }
-    .stProgress > div > div > div > div {
-        background-image: linear-gradient(to right, #ff0000, #ffaa00, #ffff00, #00ff00);
+
+    .stTabs [role="tablist"] {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        padding: 1rem 0;
+        background: transparent;
     }
-    .password-feedback {
-        padding: 1.5rem;
-        border-radius: 8px;
-        margin-top: 1.5rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+    .stTabs [role="tab"] {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        color: var(--text-color);
         transition: all 0.3s ease;
+        box-shadow: var(--shadow);
     }
-    .password-feedback:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    .weak {
-        background-color: rgba(255, 0, 0, 0.1);
-        border-left: 5px solid #ff0000;
-    }
-    .normal {
-        background-color: rgba(255, 165, 0, 0.1);
-        border-left: 5px solid #ffa500;
-    }
-    .strong {
-        background-color: rgba(0, 128, 0, 0.1);
-        border-left: 5px solid #008000;
-    }
-    .header {
-        text-align: center;
-        margin-bottom: 2rem;
-        color: #2c3e50;
-    }
-    .suggestion-item {
-        margin-bottom: 0.8rem;
-        transition: transform 0.2s ease;
-    }
-    .suggestion-item:hover {
-        transform: translateX(5px);
-    }
-    .stButton > button {
-        background-color: #4CAF50;
+
+    .stTabs [role="tab"][aria-selected="true"] {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
         color: white;
-        font-weight: bold;
-        border-radius: 30px;
-        padding: 0.5rem 2rem;
-        border: none;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
+    }
+
+    .password-input-container {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow);
         transition: all 0.3s ease;
     }
+
+    .password-input-container:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .stProgress > div > div > div > div {
+        background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        height: 10px;
+        border-radius: 5px;
+    }
+
+    .stButton > button {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border-radius: 10px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: none;
+    }
+
     .stButton > button:hover {
-        background-color: #45a049;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
     }
-    .password-input-container {
-        background-color: white;
-        padding: 1.5rem;
+
+    .app-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .app-subtitle {
+        font-size: 1.1rem;
+        color: var(--text-color);
+        text-align: center;
+        opacity: 0.8;
+    }
+
+    .suggestion-item {
+        background: #ffffff;
+        padding: 1rem;
         border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow);
     }
-    .result-container {
-        animation: fadeIn 0.5s ease-in-out;
+
+    .suggestion-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
     }
+
+    .password-feedback {
+        background: var(--glass-bg);
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-top: 1rem;
+        box-shadow: var(--shadow);
+    }
+
+    .footer {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 1.5rem;
+        border-radius: 16px;
+        text-align: center;
+        margin-top: 2rem;
+        font-size: 0.9rem;
+        box-shadow: var(--shadow);
+    }
+
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
     }
-    .footer {
-        margin-top: 2rem;
-        text-align: center;
-        color: #7f8c8d;
-        font-size: 0.9rem;
-    }
-    .app-title {
-        font-size: 2.5rem;
-        background: linear-gradient(45deg, #2c3e50, #4CAF50);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 0.5rem;
-    }
-    .app-subtitle {
-        color: #7f8c8d;
-        font-size: 1.2rem;
+
+    .fade-in {
+        animation: fadeIn 0.5s ease-out;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# App header with enhanced styling
-st.markdown("<h1 class='header app-title'>🔒 Password Strength Meter</h1>", unsafe_allow_html=True)
-st.markdown("<p class='header app-subtitle'>Create and verify secure passwords with instant feedback</p>", unsafe_allow_html=True)
+# App Header
+st.markdown("""
+    <div class='fade-in'>
+        <h1 class='app-title'>🛡️ Password Fortress</h1>
+        <p class='app-subtitle'>Secure Your Digital Life with Confidence</p>
+    </div>
+""", unsafe_allow_html=True)
 
-# Create a container for the password input section
-with st.container():
-    st.markdown("<div class='password-input-container'>", unsafe_allow_html=True)
-    
-    # Password input
-    password = st.text_input("Enter your password", type="password")
-    
-    # Submit button
-    submit_button = st.button("Check Password Strength")
-    
-    st.markdown("</div>", unsafe_allow_html=True)
+# Tabs for different features
+tabs = st.tabs(["🔍 Check Strength", "🎲 Random Generator", "🛠️ Custom Builder"])
 
-# Function to evaluate password strength
+# Function to evaluate password strength (unchanged)
 def evaluate_password(password):
     if not password:
-        return 0, "Empty", []
+        return 0, "Empty", [], ""
     
-    # Use zxcvbn for comprehensive password analysis
     result = zxcvbn(password)
-    score = result['score']  # 0-4 score
-    
-    # Get feedback from zxcvbn
+    score = result['score']
     feedback = result.get('feedback', {})
     warning = feedback.get('warning', '')
     suggestions = feedback.get('suggestions', [])
     
-    # Add our own suggestions if zxcvbn doesn't provide enough
+    char_set_size = 0
+    if any(c.isupper() for c in password):
+        char_set_size += 26
+    if any(c.islower() for c in password):
+        char_set_size += 26
+    if any(c.isdigit() for c in password):
+        char_set_size += 10
+    if any(c in string.punctuation for c in password):
+        char_set_size += len(string.punctuation)
+    
+    entropy = 0
+    if char_set_size > 0:
+        entropy = math.log2(char_set_size) * len(password)
+    
     if len(suggestions) < 2:
         default_suggestions = [
-            "Use a mix of characters (uppercase, lowercase, numbers, and special characters)",
-            "Avoid common words or phrases",
-            "Don't use personal information",
-            "Make it at least 12 characters long for better security",
-            "Consider using a passphrase (a sequence of random words)"
+            "Mix uppercase, lowercase, numbers, and special characters",
+            "Avoid common words or personal info",
+            "Aim for at least 12 characters",
+            "Use a unique password for each account",
+            f"Entropy: {entropy:.1f} bits (higher is better)",
         ]
         suggestions.extend(default_suggestions)
-        # Remove duplicates while preserving order
         suggestions = list(dict.fromkeys(suggestions))
     
-    # Simplify to three strength categories
     if score <= 1:
         strength = "Weak"
         percentage = 25
     elif score <= 3:
-        strength = "Normal"
+        strength = "Moderate"
         percentage = 65
     else:
         strength = "Strong"
@@ -163,62 +221,145 @@ def evaluate_password(password):
     
     return percentage, strength, suggestions, warning
 
-# Main app logic
-if password and submit_button:
-    # Add a small delay to simulate processing and create a smoother experience
-    with st.spinner("Analyzing password strength..."):
-        time.sleep(0.8)
-    
-    # Evaluate the password
-    strength_percentage, strength_category, suggestions, warning = evaluate_password(password)
-    
-    # Create a container for results with animation
-    st.markdown("<div class='result-container'>", unsafe_allow_html=True)
-    
-    # Display strength meter
-    st.markdown(f"<h3>Password Strength: {strength_category}</h3>", unsafe_allow_html=True)
-    st.progress(int(strength_percentage))
-    
-    # Display strength feedback with appropriate styling
-    css_class = strength_category.lower().replace(" ", "-")
-    
+# Tab 1: Password Strength Checker
+with tabs[0]:
     with st.container():
-        st.markdown(f"<div class='password-feedback {css_class}'>", unsafe_allow_html=True)
-        
-        # Display warning if any
-        if warning:
-            st.markdown(f"<h4>Warning:</h4>", unsafe_allow_html=True)
-            st.markdown(f"<p class='suggestion-item'>• {warning}</p>", unsafe_allow_html=True)
-        
-        # Display improvement suggestions
-        st.markdown("<h4>Suggestions to improve:</h4>", unsafe_allow_html=True)
-        for suggestion in suggestions[:5]:  # Limit to 5 suggestions
-            st.markdown(f"<p class='suggestion-item'>• {suggestion}</p>", unsafe_allow_html=True)
-        
+        st.markdown("<div class='password-input-container fade-in'>", unsafe_allow_html=True)
+        st.subheader("Test Your Password")
+        password = st.text_input("Enter your password", type="password", key="check_password")
+        submit_button = st.button("Analyze Strength")
         st.markdown("</div>", unsafe_allow_html=True)
-    
+
+# Tab 2: Random Password Generator
+with tabs[1]:
+    with st.container():
+        st.markdown("<div class='password-input-container fade-in'>", unsafe_allow_html=True)
+        st.subheader("Generate a Random Password")
+        password_length = st.slider("Length", 8, 32, 16)
+        col1, col2 = st.columns(2)
+        with col1:
+            use_uppercase = st.checkbox("Uppercase", True)
+            use_lowercase = st.checkbox("Lowercase", True)
+        with col2:
+            use_numbers = st.checkbox("Numbers", True)
+            use_special = st.checkbox("Special Characters", True)
+        generate_button = st.button("Generate Password")
+        
+        def generate_random_password(length, use_upper, use_lower, use_nums, use_special):
+            if not any([use_upper, use_lower, use_nums, use_special]):
+                return "Select at least one character type", False
+            chars = []
+            if use_upper: chars.append(string.ascii_uppercase)
+            if use_lower: chars.append(string.ascii_lowercase)
+            if use_nums: chars.append(string.digits)
+            if use_special: chars.append(string.punctuation)
+            all_chars = ''.join(chars)
+            password = []
+            if use_upper: password.append(random.choice(string.ascii_uppercase))
+            if use_lower: password.append(random.choice(string.ascii_lowercase))
+            if use_nums: password.append(random.choice(string.digits))
+            if use_special: password.append(random.choice(string.punctuation))
+            remaining_length = length - len(password)
+            password.extend(random.choices(all_chars, k=remaining_length))
+            random.shuffle(password)
+            return ''.join(password), True
+        
+        if generate_button:
+            with st.spinner("Generating..."):
+                time.sleep(0.5)
+                random_password, success = generate_random_password(
+                    password_length, use_uppercase, use_lowercase, use_numbers, use_special
+                )
+            if success:
+                st.code(random_password)
+                strength_percentage, strength_category, _, _ = evaluate_password(random_password)
+                st.markdown(f"**Strength:** {strength_category}")
+                st.progress(int(strength_percentage))
+            else:
+                st.error(random_password)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+# Tab 3: Custom Password Generator
+with tabs[2]:
+    with st.container():
+        st.markdown("<div class='password-input-container fade-in'>", unsafe_allow_html=True)
+        st.subheader("Enhance Your Password")
+        base_password = st.text_input("Enter your password", type="password", key="custom_password")
+        enhance_length = st.checkbox("Increase Length", True)
+        enhance_complexity = st.checkbox("Add Complexity", True)
+        enhance_case = st.checkbox("Mix Case", True)
+        enhance_button = st.button("Enhance Password")
+        
+        def enhance_password(password, add_length, add_complexity, mix_case):
+            if not password:
+                return "Enter a password", False
+            enhanced = password
+            if mix_case:
+                char_list = list(enhanced)
+                for i in range(len(char_list)):
+                    if char_list[i].isalpha() and random.random() > 0.5:
+                        char_list[i] = char_list[i].swapcase()
+                enhanced = ''.join(char_list)
+            if add_complexity:
+                if not any(c in string.punctuation for c in enhanced):
+                    enhanced += random.choice(string.punctuation)
+                if not any(c.isdigit() for c in enhanced):
+                    enhanced += random.choice(string.digits)
+            if add_length and len(enhanced) < 12:
+                extra_chars = 12 - len(enhanced)
+                enhanced += ''.join(random.choices(string.ascii_letters + string.digits + string.punctuation, k=extra_chars))
+            return enhanced, True
+        
+        if enhance_button and base_password:
+            with st.spinner("Enhancing..."):
+                time.sleep(0.5)
+                enhanced_password, success = enhance_password(
+                    base_password, enhance_length, enhance_complexity, enhance_case
+                )
+            if success:
+                st.code(enhanced_password)
+                orig_percentage, orig_category, _, _ = evaluate_password(base_password)
+                enhanced_percentage, enhanced_category, _, _ = evaluate_password(enhanced_password)
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown(f"**Original:** {orig_category}")
+                    st.progress(int(orig_percentage))
+                with col2:
+                    st.markdown(f"**Enhanced:** {enhanced_category}")
+                    st.progress(int(enhanced_percentage))
+            else:
+                st.error(enhanced_password)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+# Main logic for Password Checker
+if password and submit_button:
+    with st.spinner("Analyzing..."):
+        time.sleep(0.8)
+    strength_percentage, strength_category, suggestions, warning = evaluate_password(password)
+    st.markdown("<div class='password-feedback fade-in'>", unsafe_allow_html=True)
+    st.markdown(f"**Strength:** {strength_category}")
+    st.progress(int(strength_percentage))
+    if warning:
+        st.warning(f"⚠️ {warning}")
+    if suggestions:
+        st.markdown("**Suggestions:**")
+        for suggestion in suggestions[:5]:
+            st.markdown(f"- {suggestion}", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-# Password security information
-with st.expander("Learn about password security"):
+# Security Tips
+with st.expander("🔐 Password Security Tips"):
     st.markdown("""
-    ### Why Password Strength Matters
-    
-    Strong passwords are your first line of defense against unauthorized access to your accounts and personal information.
-    
-    ### Best Practices for Password Security:
-    
-    1. **Use unique passwords** for each account
-    2. **Create long passwords** - aim for at least 12 characters
-    3. **Mix character types** - include uppercase, lowercase, numbers, and symbols
-    4. **Avoid personal information** like names, birthdays, or common words
-    5. **Consider using a password manager** to generate and store complex passwords
-    6. **Enable two-factor authentication** when available
-    7. **Change passwords periodically**, especially for critical accounts
-    
-    Remember: The most secure password is one that you can remember but others cannot guess.
+    - Use **unique passwords** for every account
+    - Aim for **12+ characters**
+    - Include a mix of **letters, numbers, and symbols**
+    - Avoid **personal info** (e.g., birthdays)
+    - Consider a **password manager**
     """)
 
 # Footer
-st.markdown("---")
-st.markdown("<div class='footer'>Created with ❤️ by Muhammad Tayyab using Streamlit • Secure Password Checker</div>", unsafe_allow_html=True)
+st.markdown("""
+    <div class='footer fade-in'>
+        Created with ❤️ by Muhammad Tayyab • Powered by Streamlit
+    </div>
+""", unsafe_allow_html=True)
